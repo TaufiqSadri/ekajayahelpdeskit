@@ -1,4 +1,3 @@
-Berikut versi **FULL README** yang bisa langsung kamu copy–paste ke `README.md` tanpa edit lagi.
 
 ---
 
