@@ -1,31 +1,32 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import Modal from '../components/Modal'
 import Card from '../components/Card'
 import { supabase } from '../lib/supabase'
 
-function TicketDetail(){
+function TicketPage(){
 
-const { id } = useParams()
+const navigate = useNavigate()
 
-const [ticket,setTicket] = useState(null)
-const [role,setRole] = useState(null)
+const [tickets,setTickets] = useState([])
+const [modalOpen,setModalOpen] = useState(false)
 
-const [discussions,setDiscussions] = useState([])
-const [message,setMessage] = useState('')
-
-const [loading,setLoading] = useState(true)
-
+const [formData,setFormData] = useState({
+title:'',
+description:'',
+priority:'medium'
+})
 
 
 useEffect(()=>{
 
-loadData()
+fetchMyTickets()
 
-},[id])
+},[])
 
 
 
-const loadData = async()=>{
+const fetchMyTickets = async()=>{
 
 const {data:{session}} =
 await supabase.auth.getSession()
@@ -33,138 +34,71 @@ await supabase.auth.getSession()
 if(!session) return
 
 
-/* ambil role */
-
-const {data:profile} =
-await supabase
-.from('profiles')
-.select('role')
-.eq('id',session.user.id)
-.single()
-
-setRole(profile?.role)
-
-
-
-/* ambil tiket */
-
-const {data:ticketData} =
+const {data,error} =
 await supabase
 .from('tickets')
-.select(`
- *,
- profiles(full_name)
-`)
-.eq('id',id)
-.single()
+.select('*')
+.eq('user_id',session.user.id)
+.order('created_at',{ascending:false})
 
-setTicket(ticketData)
+if(error){
 
+console.error(error)
+return
 
+}
 
-/* ambil diskusi */
-
-const {data:discussionData} =
-await supabase
-.from('internal_discussions')
-.select(`
- id,
- message,
- created_at,
- profiles(full_name)
-`)
-.eq('ticket_id',id)
-.order('created_at',{ascending:true})
-
-setDiscussions(discussionData || [])
-
-
-setLoading(false)
+setTickets(data || [])
 
 }
 
 
 
-/* CLOSE TICKET */
+/* BUAT TIKET */
 
-const closeTicket = async()=>{
-
-await supabase
-.from('tickets')
-.update({
-status:'closed'
-})
-.eq('id',id)
-
-loadData()
-
-}
-
-
-
-/* TAMBAH DISKUSI */
-
-const sendDiscussion = async(e)=>{
+const handleSubmit = async(e)=>{
 
 e.preventDefault()
-
-if(!message.trim()) return
-
 
 const {data:{session}} =
 await supabase.auth.getSession()
 
+if(!session) return
 
+
+const {error} =
 await supabase
-.from('internal_discussions')
+.from('tickets')
 .insert({
 
-ticket_id:id,
-
+title:formData.title,
+description:formData.description,
+priority:formData.priority,
 user_id:session.user.id,
-
-message:message
+status:'open'
 
 })
 
 
-setMessage('')
+if(error){
 
-loadData()
+console.error(error)
+return
 
 }
 
 
+setModalOpen(false)
 
-/* HAPUS DISKUSI */
+setFormData({
+title:'',
+description:'',
+priority:'medium'
+})
 
-const deleteDiscussion = async (discussionId) => {
+fetchMyTickets()
 
-  const { error } =
-  await supabase
-  .from('internal_discussions')
-  .delete()
-  .eq('id', discussionId)
-  
-  if(error){
-  console.error(error)
-  return
-  }
-  
-  setTimeout(()=>{
-  loadData()
-  },300)
-  
-  }
-
-
-
-if(loading)
-return <div>Loading...</div>
-
-
-if(!ticket)
-return <div>Tiket tidak ditemukan</div>
+}
 
 
 
@@ -173,144 +107,70 @@ return(
 <div className="space-y-6">
 
 
-{/* DETAIL TIKET */}
+<div className="flex justify-between items-center">
 
-<Card>
+<h1 className="text-2xl font-bold">
 
-<h2 className="text-xl font-bold mb-4">
+Tiket Saya
 
-{ticket.title}
-
-</h2>
+</h1>
 
 
-<p className="mb-2">
+<button
+onClick={()=>setModalOpen(true)}
+className="btn-primary"
+>
 
-Pelapor:
+Buat Tiket
 
-{ticket.profiles?.full_name}
+</button>
 
-</p>
-
-
-<p className="mb-2">
-
-Status:
-
-<span className="ml-2 font-semibold">
-
-{ticket.status}
-
-</span>
-
-</p>
-
-
-<p className="mb-2">
-
-Prioritas:
-
-{ticket.priority}
-
-</p>
-
-
-
-<div className="mt-4 p-4 bg-gray-50 rounded">
-
-{ticket.description}
 
 </div>
 
 
 
-{/* BUTTON CLOSE TIKET */}
-
-{role === 'admin' && ticket.status === 'open' &&(
-
-<button
-onClick={closeTicket}
-className="btn-primary mt-4"
->
-
-Close Ticket
-
-</button>
-
-)}
-
-</Card>
-
-
-
-{/* DISKUSI INTERNAL ADMIN */}
-
-{role === 'admin' &&(
-
 <Card>
 
-<h3 className="text-lg font-semibold mb-4">
+<div className="space-y-4">
 
-Diskusi Internal
+{tickets.length===0?(
 
-</h3>
+<div className="text-gray-500 text-center py-6">
 
-
-
-{/* LIST DISKUSI */}
-
-<div className="space-y-3 mb-4">
-
-{discussions.length === 0 ?(
-
-<div className="text-gray-500">
-
-Belum ada diskusi
+Belum ada tiket
 
 </div>
 
 ):(
 
 
-discussions.map(d=>(
+tickets.map(ticket=>(
 
 <div
-key={d.id}
-className="p-3 border rounded"
+key={ticket.id}
+onClick={()=>navigate(`/tickets/${ticket.id}`)}
+className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition"
 >
 
-<div className="flex justify-between">
+<div className="font-semibold">
 
-<div className="text-sm font-semibold">
-
-{d.profiles?.full_name}
+{ticket.title}
 
 </div>
 
 
-<button
-onClick={()=>deleteDiscussion(d.id)}
-className="text-red-500 text-sm"
->
+<div className="text-sm text-gray-500">
 
-Hapus
-
-</button>
+Status: {ticket.status}
 
 </div>
 
 
-<div className="text-sm mt-1">
+<div className="text-xs text-gray-400">
 
-{d.message}
-
-</div>
-
-
-<div className="text-xs text-gray-500 mt-1">
-
-{new Date(d.created_at)
-.toLocaleString('id-ID')}
+{new Date(ticket.created_at)
+.toLocaleDateString('id-ID')}
 
 </div>
 
@@ -322,36 +182,126 @@ Hapus
 
 </div>
 
+</Card>
 
 
-{/* FORM DISKUSI */}
 
-<form onSubmit={sendDiscussion}>
+{/* MODAL BUAT TIKET */}
 
-<textarea
-value={message}
-onChange={(e)=>setMessage(e.target.value)}
-placeholder="Tulis diskusi perbaikan..."
-className="w-full border rounded p-2 mb-3"
+<Modal
+isOpen={modalOpen}
+onClose={()=>setModalOpen(false)}
+title="Buat Tiket"
+>
+
+<form
+onSubmit={handleSubmit}
+className="space-y-5"
+>
+
+<div>
+
+<label className="block mb-1 font-medium">
+
+Judul Tiket
+
+</label>
+
+
+<input
+type="text"
+className="w-full border rounded-lg px-3 py-2"
+placeholder="Contoh: Internet tidak bisa diakses"
+value={formData.title}
+onChange={(e)=>
+setFormData({
+...formData,
+title:e.target.value
+})
+}
 required
 />
+
+</div>
+
+
+
+<div>
+
+<label className="block mb-1 font-medium">
+
+Deskripsi Masalah
+
+</label>
+
+
+<textarea
+className="w-full border rounded-lg px-3 py-2 h-28"
+placeholder="Jelaskan masalah yang terjadi..."
+value={formData.description}
+onChange={(e)=>
+setFormData({
+...formData,
+description:e.target.value
+})
+}
+required
+/>
+
+</div>
+
+
+
+<div>
+
+<label className="block mb-1 font-medium">
+
+Prioritas
+
+</label>
+
+
+<select
+className="w-full border rounded-lg px-3 py-2"
+value={formData.priority}
+onChange={(e)=>
+setFormData({
+...formData,
+priority:e.target.value
+})
+}
+>
+
+<option value="low">
+Low - Tidak Mendesak
+</option>
+
+<option value="medium">
+Medium - Normal
+</option>
+
+<option value="high">
+High - Mendesak
+</option>
+
+</select>
+
+</div>
+
 
 
 <button
 type="submit"
-className="btn-primary"
+className="btn-primary w-full py-3"
 >
 
-Kirim Diskusi
+Submit Tiket
 
 </button>
 
 </form>
 
-</Card>
-
-)}
-
+</Modal>
 
 
 </div>
@@ -360,4 +310,4 @@ Kirim Diskusi
 
 }
 
-export default TicketDetail
+export default TicketPage
