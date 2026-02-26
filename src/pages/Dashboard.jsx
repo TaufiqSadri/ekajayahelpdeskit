@@ -117,12 +117,16 @@ function Dashboard() {
               operasional di seluruh unit pabrik dan kantor.
             </p>
             <button
-              type="button"
-              onClick={() => navigate('/tickets')}
-              className="inline-flex items-center justify-center rounded-xl bg-white/95 px-4 py-2.5 text-sm font-semibold text-emerald-900 shadow-md shadow-emerald-900/20 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900 transition-all"
-            >
-              Lihat Tiket Saya
-            </button>
+type="button"
+onClick={() => navigate('/tickets')}
+className="inline-flex items-center justify-center rounded-xl bg-white/95 px-4 py-2.5 text-sm font-semibold text-emerald-900 shadow-md hover:bg-white transition"
+>
+
+{role === 'admin'
+? 'Kelola Semua Tiket'
+: 'Lihat Tiket Saya'}
+
+</button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">

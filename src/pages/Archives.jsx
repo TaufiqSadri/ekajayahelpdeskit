@@ -4,7 +4,7 @@ import Card from '../components/Card'
 import Table from '../components/Table'
 import { supabase } from '../lib/supabase'
 
-function Tickets(){
+function Archives(){
 
 const navigate = useNavigate()
 
@@ -14,15 +14,13 @@ const [loading,setLoading] = useState(true)
 
 useEffect(()=>{
 
-fetchTickets()
+fetchArchives()
 
 },[])
 
 
 
-const fetchTickets = async()=>{
-
-try{
+const fetchArchives = async()=>{
 
 const {data,error} =
 await supabase
@@ -34,10 +32,13 @@ await supabase
  created_at,
  profiles(full_name)
 `)
-.eq('status','open')
+.eq('status','closed')
 .order('created_at',{ascending:false})
 
-if(error) throw error
+if(error){
+console.error(error)
+return
+}
 
 
 const formatted = data.map(t=>({
@@ -58,19 +59,13 @@ date:t.created_at
 
 setTickets(formatted)
 
-}catch(err){
-
-console.error(err)
-
-}
-
 setLoading(false)
 
 }
 
 
 
-const columns = [
+const columns=[
 
 {key:'reporter',label:'Pelapor'},
 
@@ -99,7 +94,7 @@ return(
 
 <div className="py-10 text-center">
 
-Memuat tiket...
+Memuat arsip...
 
 </div>
 
@@ -117,7 +112,7 @@ return(
 
 <h2 className="text-xl font-semibold mb-4">
 
-Tiket Aktif
+Arsip Tiket
 
 </h2>
 
@@ -137,4 +132,4 @@ navigate(`/tickets/${row.id}`)
 
 }
 
-export default Tickets
+export default Archives

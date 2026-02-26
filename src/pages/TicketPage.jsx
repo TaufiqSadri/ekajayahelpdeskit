@@ -1,120 +1,363 @@
 import { useEffect, useState } from 'react'
-import Modal from '../components/Modal'
+import { useParams } from 'react-router-dom'
+import Card from '../components/Card'
 import { supabase } from '../lib/supabase'
 
-function TicketPage() {
-  const [tickets, setTickets] = useState([])
-  const [modalOpen, setModalOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    priority: 'medium',
-  })
+function TicketDetail(){
 
-  useEffect(() => {
-    fetchMyTickets()
-  }, [])
+const { id } = useParams()
 
-  const fetchMyTickets = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
+const [ticket,setTicket] = useState(null)
+const [role,setRole] = useState(null)
 
-    const { data } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
+const [discussions,setDiscussions] = useState([])
+const [message,setMessage] = useState('')
 
-    setTickets(data || [])
-  }
+const [loading,setLoading] = useState(true)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
 
-    await supabase.from('tickets').insert([
-      {
-        title: formData.title,
-        description: formData.description,
-        priority: formData.priority,
-        user_id: session.user.id,
-        status: 'open',
-      },
-    ])
+useEffect(()=>{
 
-    setModalOpen(false)
-    setFormData({ title: '', description: '', priority: 'medium' })
-    fetchMyTickets()
-  }
+loadData()
 
-  return (
-    <div className="space-y-6">
-      <button
-        onClick={() => setModalOpen(true)}
-        className="btn-primary"
-      >
-        Buat Tiket
-      </button>
+},[id])
 
-      <div className="space-y-3">
-        {tickets.map((ticket) => (
-          <div
-            key={ticket.id}
-            className="p-4 border rounded-lg"
-          >
-            <h3 className="font-semibold">{ticket.title}</h3>
-            <p className="text-sm text-gray-500">
-              {ticket.status}
-            </p>
-          </div>
-        ))}
-      </div>
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Buat Tiket"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Judul"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData({ ...formData, title: e.target.value })
-            }
-            required
-          />
 
-          <textarea
-            placeholder="Deskripsi"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            required
-          />
+const loadData = async()=>{
 
-          <select
-            value={formData.priority}
-            onChange={(e) =>
-              setFormData({ ...formData, priority: e.target.value })
-            }
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
+const {data:{session}} =
+await supabase.auth.getSession()
 
-          <button type="submit" className="btn-primary">
-            Submit
-          </button>
-        </form>
-      </Modal>
-    </div>
-  )
+if(!session) return
+
+
+/* ambil role */
+
+const {data:profile} =
+await supabase
+.from('profiles')
+.select('role')
+.eq('id',session.user.id)
+.single()
+
+setRole(profile?.role)
+
+
+
+/* ambil tiket */
+
+const {data:ticketData} =
+await supabase
+.from('tickets')
+.select(`
+ *,
+ profiles(full_name)
+`)
+.eq('id',id)
+.single()
+
+setTicket(ticketData)
+
+
+
+/* ambil diskusi */
+
+const {data:discussionData} =
+await supabase
+.from('internal_discussions')
+.select(`
+ id,
+ message,
+ created_at,
+ profiles(full_name)
+`)
+.eq('ticket_id',id)
+.order('created_at',{ascending:true})
+
+setDiscussions(discussionData || [])
+
+
+setLoading(false)
+
 }
 
-export default TicketPage
+
+
+/* CLOSE TICKET */
+
+const closeTicket = async()=>{
+
+await supabase
+.from('tickets')
+.update({
+status:'closed'
+})
+.eq('id',id)
+
+loadData()
+
+}
+
+
+
+/* TAMBAH DISKUSI */
+
+const sendDiscussion = async(e)=>{
+
+e.preventDefault()
+
+if(!message.trim()) return
+
+
+const {data:{session}} =
+await supabase.auth.getSession()
+
+
+await supabase
+.from('internal_discussions')
+.insert({
+
+ticket_id:id,
+
+user_id:session.user.id,
+
+message:message
+
+})
+
+
+setMessage('')
+
+loadData()
+
+}
+
+
+
+/* HAPUS DISKUSI */
+
+const deleteDiscussion = async (discussionId) => {
+
+  const { error } =
+  await supabase
+  .from('internal_discussions')
+  .delete()
+  .eq('id', discussionId)
+  
+  if(error){
+  console.error(error)
+  return
+  }
+  
+  setTimeout(()=>{
+  loadData()
+  },300)
+  
+  }
+
+
+
+if(loading)
+return <div>Loading...</div>
+
+
+if(!ticket)
+return <div>Tiket tidak ditemukan</div>
+
+
+
+return(
+
+<div className="space-y-6">
+
+
+{/* DETAIL TIKET */}
+
+<Card>
+
+<h2 className="text-xl font-bold mb-4">
+
+{ticket.title}
+
+</h2>
+
+
+<p className="mb-2">
+
+Pelapor:
+
+{ticket.profiles?.full_name}
+
+</p>
+
+
+<p className="mb-2">
+
+Status:
+
+<span className="ml-2 font-semibold">
+
+{ticket.status}
+
+</span>
+
+</p>
+
+
+<p className="mb-2">
+
+Prioritas:
+
+{ticket.priority}
+
+</p>
+
+
+
+<div className="mt-4 p-4 bg-gray-50 rounded">
+
+{ticket.description}
+
+</div>
+
+
+
+{/* BUTTON CLOSE TIKET */}
+
+{role === 'admin' && ticket.status === 'open' &&(
+
+<button
+onClick={closeTicket}
+className="btn-primary mt-4"
+>
+
+Close Ticket
+
+</button>
+
+)}
+
+</Card>
+
+
+
+{/* DISKUSI INTERNAL ADMIN */}
+
+{role === 'admin' &&(
+
+<Card>
+
+<h3 className="text-lg font-semibold mb-4">
+
+Diskusi Internal
+
+</h3>
+
+
+
+{/* LIST DISKUSI */}
+
+<div className="space-y-3 mb-4">
+
+{discussions.length === 0 ?(
+
+<div className="text-gray-500">
+
+Belum ada diskusi
+
+</div>
+
+):(
+
+
+discussions.map(d=>(
+
+<div
+key={d.id}
+className="p-3 border rounded"
+>
+
+<div className="flex justify-between">
+
+<div className="text-sm font-semibold">
+
+{d.profiles?.full_name}
+
+</div>
+
+
+<button
+onClick={()=>deleteDiscussion(d.id)}
+className="text-red-500 text-sm"
+>
+
+Hapus
+
+</button>
+
+</div>
+
+
+<div className="text-sm mt-1">
+
+{d.message}
+
+</div>
+
+
+<div className="text-xs text-gray-500 mt-1">
+
+{new Date(d.created_at)
+.toLocaleString('id-ID')}
+
+</div>
+
+</div>
+
+))
+
+)}
+
+</div>
+
+
+
+{/* FORM DISKUSI */}
+
+<form onSubmit={sendDiscussion}>
+
+<textarea
+value={message}
+onChange={(e)=>setMessage(e.target.value)}
+placeholder="Tulis diskusi perbaikan..."
+className="w-full border rounded p-2 mb-3"
+required
+/>
+
+
+<button
+type="submit"
+className="btn-primary"
+>
+
+Kirim Diskusi
+
+</button>
+
+</form>
+
+</Card>
+
+)}
+
+
+
+</div>
+
+)
+
+}
+
+export default TicketDetail

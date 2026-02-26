@@ -12,10 +12,10 @@ import {
 const menuItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/tickets', label: 'Tiket Pengaduan', icon: Ticket },
-  { path: '/discussions', label: 'Diskusi Internal', icon: MessageSquare },
   { path: '/announcements', label: 'Pengumuman IT', icon: Megaphone },
   { path: '/reports', label: 'Laporan', icon: FileText },
   { path: '/settings', label: 'Pengaturan', icon: Settings },
+  { path: '/archives', label: 'Arsip Tiket', icon: FileText },
 ]
 
 function Sidebar({ isOpen, onClose }) {
