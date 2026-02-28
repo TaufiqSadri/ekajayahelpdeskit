@@ -1,48 +1,49 @@
-import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, User, LogOut, Menu } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { useState, useRef, useEffect } from "react";
+import { Search, Bell, User, LogOut, Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 function Navbar({ onMenuClick }) {
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [userName, setUserName] = useState('User')
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userName, setUserName] = useState("User");
 
-  const userMenuRef = useRef(null)
-  const navigate = useNavigate()
+  const userMenuRef = useRef(null);
+  const navigate = useNavigate();
 
   // Ambil user dari Supabase
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user?.email) {
-        const name = session.user.email.split('@')[0]
-        setUserName(name)
+        const name = session.user.email.split("@")[0];
+        setUserName(name);
       }
-    }
-    getUser()
-  }, [])
+    };
+    getUser();
+  }, []);
 
   // Tutup menu saat klik luar
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false)
+        setUserMenuOpen(false);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    navigate('/login', { replace: true })
-  }
+    await supabase.auth.signOut();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-30 shadow-sm">
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">
-        
         {/* Left */}
         <div className="flex items-center gap-3">
           <button
@@ -62,7 +63,6 @@ function Navbar({ onMenuClick }) {
 
         {/* Right */}
         <div className="flex items-center gap-3">
-
           {/* Notifications */}
           <div className="relative">
             <button
@@ -91,8 +91,8 @@ function Navbar({ onMenuClick }) {
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border py-2 z-50">
                 <button
                   onClick={() => {
-                    setUserMenuOpen(false)
-                    navigate('/settings')
+                    setUserMenuOpen(false);
+                    navigate("/settings");
                   }}
                   className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                 >
@@ -112,11 +112,10 @@ function Navbar({ onMenuClick }) {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;

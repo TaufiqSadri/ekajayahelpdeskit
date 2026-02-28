@@ -1,33 +1,37 @@
-import { supabase } from '../lib/supabase'
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from "../lib/supabase";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
 function Register() {
-  const navigate = useNavigate()
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-  
-    if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError('Semua field wajib diisi.')
-      return
+    e.preventDefault();
+    setError("");
+
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !confirmPassword.trim()
+    ) {
+      setError("Semua field wajib diisi.");
+      return;
     }
-  
+
     if (password !== confirmPassword) {
-      setError('Konfirmasi password harus sama dengan password.')
-      return
+      setError("Konfirmasi password harus sama dengan password.");
+      return;
     }
-  
-    setLoading(true)
-  
+
+    setLoading(true);
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -36,33 +40,33 @@ function Register() {
           full_name: fullName,
         },
       },
-    })
-  
+    });
+
     if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
+      setError(error.message);
+      setLoading(false);
+      return;
     }
-  
+
     if (data.user) {
-      await supabase.from('profiles').insert([
+      await supabase.from("profiles").insert([
         {
           id: data.user.id,
           full_name: fullName,
-          role: 'user',
+          role: "user",
         },
-      ])
+      ]);
     }
-  
-    setLoading(false)
-  
+
+    setLoading(false);
+
     if (!data.session) {
-      alert('Registrasi berhasil. Silakan cek email untuk verifikasi.')
-      navigate('/login')
+      alert("Registrasi berhasil. Silakan cek email untuk verifikasi.");
+      navigate("/login");
     } else {
-      navigate('/dashboard')
+      navigate("/dashboard");
     }
-  }
+  };
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Logo di atas form (tengah) */}
@@ -77,9 +81,7 @@ function Register() {
             <span className="text-xs font-semibold tracking-[0.2em] text-emerald-700 uppercase">
               Ekajaya Group
             </span>
-            <span className="text-sm text-gray-500">
-              Helpdesk IT Internal
-            </span>
+            <span className="text-sm text-gray-500">Helpdesk IT Internal</span>
           </div>
         </div>
       </header>
@@ -95,7 +97,10 @@ function Register() {
               <div className="flex-1 h-28 bg-emerald-950/90 rounded-t-2xl border border-emerald-700/40 flex items-end">
                 <div className="w-full grid grid-cols-4 gap-1 px-4 pb-3">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="h-2.5 rounded-sm bg-emerald-700/40" />
+                    <div
+                      key={i}
+                      className="h-2.5 rounded-sm bg-emerald-700/40"
+                    />
                   ))}
                 </div>
               </div>
@@ -117,7 +122,8 @@ function Register() {
                 </span>
               </h1>
               <p className="text-xs text-emerald-100/80 max-w-md">
-                Data registrasi hanya digunakan untuk keperluan identifikasi pengguna di lingkungan internal Ekajaya Group.
+                Data registrasi hanya digunakan untuk keperluan identifikasi
+                pengguna di lingkungan internal Ekajaya Group.
               </p>
             </div>
           </div>
@@ -129,7 +135,8 @@ function Register() {
                 Buat Akun Helpdesk
               </h2>
               <p className="text-sm text-gray-500 mb-8">
-                Isi data di bawah ini untuk mengaktifkan akses ke sistem helpdesk IT.
+                Isi data di bawah ini untuk mengaktifkan akses ke sistem
+                helpdesk IT.
               </p>
 
               {error && (
@@ -215,12 +222,12 @@ function Register() {
                   disabled={loading}
                   className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-[#145A32] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-900/20 hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 transition-all"
                 >
-                  {loading ? 'Memproses...' : 'Daftar Sekarang'}
+                  {loading ? "Memproses..." : "Daftar Sekarang"}
                 </button>
               </form>
 
               <p className="mt-6 text-xs text-gray-500 text-center">
-                Sudah punya akun?{' '}
+                Sudah punya akun?{" "}
                 <Link
                   to="/login"
                   className="font-semibold text-emerald-800 hover:text-emerald-900"
@@ -233,9 +240,7 @@ function Register() {
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default Register
-
-
+export default Register;

@@ -1,24 +1,24 @@
-import React from 'react'
-import { AlertCircle, RefreshCw } from 'lucide-react'
+import React from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    console.error("Error caught by boundary:", error, errorInfo);
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
-    window.location.reload()
-  }
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -60,11 +60,11 @@ class ErrorBoundary extends React.Component {
             </button>
           </div>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
-export default ErrorBoundary
+export default ErrorBoundary;

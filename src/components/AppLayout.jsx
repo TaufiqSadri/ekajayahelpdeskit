@@ -1,10 +1,10 @@
-import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar.jsx'
-import Navbar from './Navbar.jsx'
-import { useState } from 'react'
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar.jsx";
+import Navbar from "./Navbar.jsx";
+import { useState } from "react";
 
 function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -16,7 +16,7 @@ function AppLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }
 
-export default AppLayout
+export default AppLayout;

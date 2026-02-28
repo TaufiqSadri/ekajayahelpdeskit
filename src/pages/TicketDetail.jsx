@@ -1,159 +1,127 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import Card from '../components/Card'
-import { supabase } from '../lib/supabase'
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import Card from "../components/Card";
+import { supabase } from "../lib/supabase";
 
 function TicketDetail() {
+  const { id } = useParams();
 
-  const { id } = useParams()
+  const [ticket, setTicket] = useState(null);
+  const [role, setRole] = useState(null);
 
-  const [ticket, setTicket] = useState(null)
-  const [role, setRole] = useState(null)
+  const [discussions, setDiscussions] = useState([]);
+  const [message, setMessage] = useState("");
 
-  const [discussions, setDiscussions] = useState([])
-  const [message, setMessage] = useState('')
-
-  const [loading, setLoading] = useState(true)
-
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData()
-  }, [id])
-
+    loadData();
+  }, [id]);
 
   const loadData = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data: { session } } =
-      await supabase.auth.getSession()
-
-    if (!session) return
-
+    if (!session) return;
 
     /* ambil role */
 
-    const { data: profile } =
-      await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
 
-    setRole(profile?.role)
-
+    setRole(profile?.role);
 
     /* ambil tiket */
 
-    const { data: ticketData } =
-      await supabase
-        .from('tickets')
-        .select(`
+    const { data: ticketData } = await supabase
+      .from("tickets")
+      .select(
+        `
           *,
           profiles(full_name)
-        `)
-        .eq('id', id)
-        .single()
+        `
+      )
+      .eq("id", id)
+      .single();
 
-    setTicket(ticketData)
-
+    setTicket(ticketData);
 
     /* ambil diskusi */
 
-    const { data: discussionData } =
-      await supabase
-        .from('internal_discussions')
-        .select(`
+    const { data: discussionData } = await supabase
+      .from("internal_discussions")
+      .select(
+        `
           id,
           message,
           created_at,
           profiles(full_name)
-        `)
-        .eq('ticket_id', id)
-        .order('created_at', { ascending: true })
+        `
+      )
+      .eq("ticket_id", id)
+      .order("created_at", { ascending: true });
 
-    setDiscussions(discussionData || [])
+    setDiscussions(discussionData || []);
 
-    setLoading(false)
-  }
-
-
+    setLoading(false);
+  };
 
   /* CLOSE TICKET */
 
   const closeTicket = async () => {
-
     await supabase
-      .from('tickets')
+      .from("tickets")
       .update({
-        status: 'closed'
+        status: "closed",
       })
-      .eq('id', id)
+      .eq("id", id);
 
-    loadData()
-  }
-
-
+    loadData();
+  };
 
   /* KIRIM DISKUSI */
 
   const sendDiscussion = async (e) => {
+    e.preventDefault();
 
-    e.preventDefault()
+    if (!message.trim()) return;
 
-    if (!message.trim()) return
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data: { session } } =
-      await supabase.auth.getSession()
+    await supabase.from("internal_discussions").insert({
+      ticket_id: id,
+      user_id: session.user.id,
+      message: message,
+    });
 
-    await supabase
-      .from('internal_discussions')
-      .insert({
-        ticket_id: id,
-        user_id: session.user.id,
-        message: message
-      })
-
-    setMessage('')
-    loadData()
-  }
-
-
+    setMessage("");
+    loadData();
+  };
 
   /* HAPUS DISKUSI */
 
   const deleteDiscussion = async (discussionId) => {
+    await supabase.from("internal_discussions").delete().eq("id", discussionId);
 
-    await supabase
-      .from('internal_discussions')
-      .delete()
-      .eq('id', discussionId)
+    loadData();
+  };
 
-    loadData()
-  }
+  if (loading) return <div>Loading...</div>;
 
-
-
-  if (loading)
-    return <div>Loading...</div>
-
-
-  if (!ticket)
-    return <div>Tiket tidak ditemukan</div>
-
-
+  if (!ticket) return <div>Tiket tidak ditemukan</div>;
 
   return (
-
     <div className="space-y-6">
-
-
       {/* DETAIL TIKET */}
 
       <Card>
-
-        <h2 className="text-xl font-bold mb-4">
-          {ticket.title}
-        </h2>
-
+        <h2 className="text-xl font-bold mb-4">{ticket.title}</h2>
 
         <p className="mb-2">
           Pelapor:
@@ -162,137 +130,78 @@ function TicketDetail() {
           </span>
         </p>
 
-
         <p className="mb-2">
           Status:
-          <span className="ml-2 font-semibold">
-            {ticket.status}
-          </span>
+          <span className="ml-2 font-semibold">{ticket.status}</span>
         </p>
-
 
         <p className="mb-2">
           Prioritas:
-          <span className="ml-2 font-semibold">
-            {ticket.priority}
-          </span>
+          <span className="ml-2 font-semibold">{ticket.priority}</span>
         </p>
 
-
-        <div className="mt-4 p-4 bg-gray-50 rounded">
-          {ticket.description}
-        </div>
-
+        <div className="mt-4 p-4 bg-gray-50 rounded">{ticket.description}</div>
 
         {/* CLOSE TICKET */}
 
-        {role === 'admin' && ticket.status === 'open' && (
-
-          <button
-            onClick={closeTicket}
-            className="btn-primary mt-4"
-          >
+        {role === "admin" && ticket.status === "open" && (
+          <button onClick={closeTicket} className="btn-primary mt-4">
             Close Ticket
           </button>
-
         )}
-
 
         {/* INFO ARSIP */}
 
-        {ticket.status === 'closed' && (
-
+        {ticket.status === "closed" && (
           <div className="mt-4 text-gray-500 text-sm">
-
-            Tiket sudah ditutup.
-            Diskusi dinonaktifkan.
-
+            Tiket sudah ditutup. Diskusi dinonaktifkan.
           </div>
-
         )}
-
       </Card>
-
-
 
       {/* DISKUSI ADMIN */}
 
-      {role === 'admin' && (
-
+      {role === "admin" && (
         <Card>
-
-          <h3 className="text-lg font-semibold mb-4">
-            Diskusi Internal
-          </h3>
-
-
+          <h3 className="text-lg font-semibold mb-4">Diskusi Internal</h3>
 
           <div className="space-y-3 mb-4">
-
             {discussions.length === 0 ? (
-
-              <div className="text-gray-500">
-                Belum ada diskusi
-              </div>
-
+              <div className="text-gray-500">Belum ada diskusi</div>
             ) : (
-
-              discussions.map(d => (
-
-                <div
-                  key={d.id}
-                  className="p-3 border rounded"
-                >
-
+              discussions.map((d) => (
+                <div key={d.id} className="p-3 border rounded">
                   <div className="flex justify-between">
-
                     <div className="text-sm font-semibold">
                       {d.profiles?.full_name}
                     </div>
 
-
                     {/* DELETE HANYA OPEN */}
 
-                    {ticket.status === 'open' && (
-
+                    {ticket.status === "open" && (
                       <button
                         onClick={() => deleteDiscussion(d.id)}
                         className="text-red-500 text-sm hover:underline"
                       >
                         Hapus
                       </button>
-
                     )}
-
                   </div>
 
-
-                  <div className="text-sm mt-1">
-                    {d.message}
-                  </div>
-
+                  <div className="text-sm mt-1">{d.message}</div>
 
                   <div className="text-xs text-gray-500 mt-1">
-                    {new Date(d.created_at)
-                      .toLocaleString('id-ID')}
+                    {new Date(d.created_at).toLocaleString("id-ID")}
                   </div>
-
                 </div>
-
               ))
-
             )}
-
           </div>
-
-
 
           {/* FORM HANYA OPEN */}
 
-          {ticket.status === 'open' && (
-
+          {ticket.status === "open" && (
             <form onSubmit={sendDiscussion}>
-
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -301,27 +210,15 @@ function TicketDetail() {
                 required
               />
 
-
-              <button
-                type="submit"
-                className="btn-primary"
-              >
+              <button type="submit" className="btn-primary">
                 Kirim Diskusi
               </button>
-
             </form>
-
           )}
-
         </Card>
-
       )}
-
-
     </div>
-
-  )
-
+  );
 }
 
-export default TicketDetail
+export default TicketDetail;

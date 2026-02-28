@@ -1,51 +1,53 @@
-import{ useState, useEffect } from 'react'
-import Card from '../components/Card'
-import { Search, MessageSquare, Plus } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect } from "react";
+import Card from "../components/Card";
+import { Search, MessageSquare, Plus } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 function InternalDiscussion() {
-  const [discussions, setDiscussions] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [discussions, setDiscussions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDiscussions()
-  }, [])
+    fetchDiscussions();
+  }, []);
 
   const fetchDiscussions = async () => {
     try {
       const { data, error } = await supabase
-        .from('internal_discussions')
-        .select(`
+        .from("internal_discussions")
+        .select(
+          `
           id,
           message,
           created_at,
           profiles (
             full_name
           )
-        `)
-        .order('created_at', { ascending: false })
+        `
+        )
+        .order("created_at", { ascending: false });
 
-      if (error) throw error
+      if (error) throw error;
 
       const formatted = data.map((item) => ({
         id: item.id,
         title: item.message,
-        author: item.profiles?.full_name || 'Unknown',
+        author: item.profiles?.full_name || "Unknown",
         lastActivity: item.created_at,
-      }))
+      }));
 
-      setDiscussions(formatted)
+      setDiscussions(formatted);
     } catch (error) {
-      console.error('Error fetching discussions:', error)
+      console.error("Error fetching discussions:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filteredDiscussions = discussions.filter((discussion) =>
     discussion.title.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -54,9 +56,7 @@ function InternalDiscussion() {
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             Diskusi Internal
           </h1>
-          <p className="text-gray-600">
-            Forum diskusi internal tim IT
-          </p>
+          <p className="text-gray-600">Forum diskusi internal tim IT</p>
         </div>
         <button className="btn-primary flex items-center gap-2">
           <Plus size={20} />
@@ -108,11 +108,11 @@ function InternalDiscussion() {
                       <span>Oleh: {discussion.author}</span>
                       <span className="ml-4">
                         {new Date(discussion.lastActivity).toLocaleDateString(
-                          'id-ID',
+                          "id-ID",
                           {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
                           }
                         )}
                       </span>
@@ -125,7 +125,7 @@ function InternalDiscussion() {
         )}
       </Card>
     </div>
-  )
+  );
 }
 
-export default InternalDiscussion
+export default InternalDiscussion;

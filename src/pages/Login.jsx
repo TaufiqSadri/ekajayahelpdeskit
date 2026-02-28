@@ -1,54 +1,51 @@
-import { supabase } from '../lib/supabase'
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { supabase } from "../lib/supabase";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-const handleSubmit = async (e) => {
-  e.preventDefault()
-  setError('')
+    if (!email.trim() || !password.trim()) {
+      setError("Email dan password tidak boleh kosong.");
+      return;
+    }
 
-  if (!email.trim() || !password.trim()) {
-    setError('Email dan password tidak boleh kosong.')
-    return
-  }
+    setLoading(true);
 
-  setLoading(true)
-
-  const { error: signInError } =
-    await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password.trim(),
-    })
+    });
 
-  if (signInError) {
-    setError(signInError.message)
-    setLoading(false)
-    return
-  }
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
+      return;
+    }
 
-  navigate('/dashboard')
-  setLoading(false)
-}
-const handleGoogleLogin = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/dashboard',
-    },
-  })
+    navigate("/dashboard");
+    setLoading(false);
+  };
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/dashboard",
+      },
+    });
 
-  if (error) {
-    setError(error.message)
-  }
-}
-
+    if (error) {
+      setError(error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -63,9 +60,7 @@ const handleGoogleLogin = async () => {
           <span className="text-xs font-semibold tracking-[0.2em] text-emerald-700 uppercase">
             Ekajaya Group
           </span>
-          <span className="text-sm text-gray-500">
-            Helpdesk IT Internal
-          </span>
+          <span className="text-sm text-gray-500">Helpdesk IT Internal</span>
         </div>
       </header>
 
@@ -131,7 +126,8 @@ const handleGoogleLogin = async () => {
               </h1>
               <p className="text-sm text-emerald-100/80 max-w-md">
                 Akses hanya untuk karyawan Ekajaya Group di jaringan internal.
-                Laporkan kendala IT Anda dan pantau progres penyelesaiannya dalam satu dashboard.
+                Laporkan kendala IT Anda dan pantau progres penyelesaiannya
+                dalam satu dashboard.
               </p>
             </div>
           </div>
@@ -194,33 +190,33 @@ const handleGoogleLogin = async () => {
                   disabled={loading}
                   className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-[#145A32] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-900/20 hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-70 transition-all"
                 >
-                  {loading ? 'Memproses...' : 'Masuk Sekarang'}
+                  {loading ? "Memproses..." : "Masuk Sekarang"}
                 </button>
               </form>
 
               <div className="mt-4">
-  <div className="flex items-center my-4">
-    <div className="flex-1 h-px bg-gray-200"></div>
-    <span className="px-3 text-xs text-gray-400">atau</span>
-    <div className="flex-1 h-px bg-gray-200"></div>
-  </div>
+                <div className="flex items-center my-4">
+                  <div className="flex-1 h-px bg-gray-200"></div>
+                  <span className="px-3 text-xs text-gray-400">atau</span>
+                  <div className="flex-1 h-px bg-gray-200"></div>
+                </div>
 
-  <button
-    type="button"
-    onClick={handleGoogleLogin}
-    className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition"
-  >
-    <img
-      src="https://www.svgrepo.com/show/475656/google-color.svg"
-      alt="Google"
-      className="w-5 h-5"
-    />
-    Continue with Google
-  </button>
-</div>
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium hover:bg-gray-50 transition"
+                >
+                  <img
+                    src="https://www.svgrepo.com/show/475656/google-color.svg"
+                    alt="Google"
+                    className="w-5 h-5"
+                  />
+                  Continue with Google
+                </button>
+              </div>
 
               <p className="mt-6 text-xs text-gray-500 text-center">
-                Belum punya akun?{' '}
+                Belum punya akun?{" "}
                 <Link
                   to="/register"
                   className="font-semibold text-emerald-800 hover:text-emerald-900"
@@ -233,7 +229,7 @@ const handleGoogleLogin = async () => {
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;
